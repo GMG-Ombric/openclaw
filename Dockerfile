@@ -16,6 +16,21 @@ RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
       rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*; \
     fi
 
+ARG TARGETARCH=amd64
+ARG GOGCLI_VERSION=0.9.0
+RUN set -eu; \
+      arch="${TARGETARCH}"; \
+      case "${arch}" in \
+        amd64|arm64) ;; \
+        *) echo "unsupported TARGETARCH=${arch}" >&2; exit 1 ;; \
+      esac; \
+      url="https://github.com/steipete/gogcli/releases/download/v${GOGCLI_VERSION}/gogcli_${GOGCLI_VERSION}_linux_${arch}.tar.gz"; \
+      echo "[openclaw] downloading gogcli from ${url}"; \
+      curl -fsSL "${url}" -o /tmp/gogcli.tgz; \
+      tar -xzf /tmp/gogcli.tgz -C /tmp; \
+      install -m 0755 /tmp/gog /usr/local/bin/gog; \
+      rm -rf /tmp/gog /tmp/gogcli.tgz
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY ui/package.json ./ui/package.json
 COPY patches ./patches
