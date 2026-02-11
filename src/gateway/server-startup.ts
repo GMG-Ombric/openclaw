@@ -17,6 +17,7 @@ import {
 import { loadInternalHooks } from "../hooks/loader.js";
 import { isTruthyEnvValue } from "../infra/env.js";
 import { type PluginServicesHandle, startPluginServices } from "../plugins/services.js";
+import { startAlfieIntegrationSyncIfEnabled } from "../alfie/integration-sync.js";
 import { startBrowserControlServerIfEnabled } from "./server-browser.js";
 import {
   scheduleRestartSentinelWake,
@@ -44,6 +45,13 @@ export async function startGatewaySidecars(params: {
     browserControl = await startBrowserControlServerIfEnabled();
   } catch (err) {
     params.logBrowser.error(`server failed to start: ${String(err)}`);
+  }
+
+  // Alfie tenants: keep OpenClaw integrations in sync with the control plane (e.g. Google OAuth -> gog keyring).
+  try {
+    await startAlfieIntegrationSyncIfEnabled();
+  } catch (err) {
+    params.log.warn(`alfie integration sync failed to start: ${String(err)}`);
   }
 
   // Start Gmail watcher if configured (hooks.gmail.account).
