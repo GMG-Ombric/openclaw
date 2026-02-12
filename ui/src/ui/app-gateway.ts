@@ -27,6 +27,7 @@ import {
 import { loadNodes } from "./controllers/nodes.ts";
 import { loadSessions } from "./controllers/sessions.ts";
 import { GatewayBrowserClient } from "./gateway.ts";
+import { loadOrCreateInstanceId } from "./instance-id.ts";
 
 type GatewayHost = {
   settings: UiSettings;
@@ -129,6 +130,9 @@ export function connectGateway(host: GatewayHost) {
     password: host.password.trim() ? host.password : undefined,
     clientName: "openclaw-control-ui",
     mode: "webchat",
+    // If device identity is unavailable/disabled, the gateway falls back to instanceId for presence tracking.
+    // Without it, it uses a per-connection ID, which can flood the "Connected Instances" list on reconnect loops.
+    instanceId: loadOrCreateInstanceId(),
     onHello: (hello) => {
       host.connected = true;
       host.lastError = null;
